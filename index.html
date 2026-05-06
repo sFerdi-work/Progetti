@@ -1,0 +1,87 @@
+# NM Coaching Pro - PWA → APK
+
+Pacchetto PWA pronto per essere convertito in APK Android.
+
+## Contenuto
+
+- `index.html` — l'app (con manifest, theme-color e service worker già collegati)
+- `manifest.json` — manifest PWA con metadati e icone
+- `sw.js` — service worker con strategia ibrida (cache-first per asset, network-first per Supabase)
+- `icon-192.png` / `icon-512.png` — icone standard
+- `icon-maskable-192.png` / `icon-maskable-512.png` — icone maskable (Android adattivo)
+- `.nojekyll` — disabilita Jekyll su GitHub Pages
+
+## Procedura completa
+
+### 1. Hosting su GitHub Pages (gratis)
+
+a. Crea un nuovo repository su GitHub (es. `nm-coaching-pwa`), pubblico.
+
+b. Carica TUTTI i file di questa cartella nel repo (drag & drop dal sito GitHub funziona).
+
+c. Vai su **Settings → Pages**:
+   - Source: `Deploy from a branch`
+   - Branch: `main` / root
+   - Salva
+
+d. Dopo 1-2 minuti l'app sarà online a:
+   `https://<tuo-username>.github.io/nm-coaching-pwa/`
+
+e. Verifica che l'app si apra e funzioni dal browser del telefono.
+
+### 2. Verifica PWA (opzionale ma consigliato)
+
+Apri l'URL su Chrome desktop, premi F12 → tab **Application** → **Manifest**:
+verifica che icone, nome e theme-color siano corretti, senza errori.
+
+In **Service Workers** deve risultare `sw.js` registrato e attivo.
+
+### 3. Conversione in APK con PWABuilder
+
+a. Vai su **https://www.pwabuilder.com**
+
+b. Incolla l'URL della tua PWA → **Start**
+
+c. PWABuilder analizza il sito. Se mancano cose, le segnala (con questo pacchetto dovrebbe essere tutto verde).
+
+d. Clicca **Package For Stores → Android**.
+
+e. Configurazione consigliata:
+   - **Package ID**: `com.transitalia.nmcoaching` (o un dominio inverso a tua scelta)
+   - **App name**: `NM Coaching Pro`
+   - **Launcher name**: `NM Coaching`
+   - **App version**: `1.1.0`
+   - **App version code**: `11`
+   - **Signing key**: scegli **"Create new"** la prima volta (PWABuilder genera la chiave e te la include nello ZIP — **CONSERVALA**, ti serve per pubblicare aggiornamenti futuri)
+
+f. Clicca **Download**. Ottieni uno ZIP con dentro:
+   - `app-release-signed.apk` ← **questo è l'APK da installare**
+   - `app-release-bundle.aab` ← solo se vuoi pubblicare sul Play Store
+   - `signing.keystore` + `key info` ← **da conservare al sicuro**
+
+### 4. Installazione su Android
+
+a. Trasferisci l'APK sul telefono (email, Drive, USB...).
+
+b. Nelle impostazioni Android: **Sicurezza → Installa app sconosciute** → consenti l'app da cui apri il file (es. File Manager o Chrome).
+
+c. Tocca l'APK → **Installa**.
+
+d. L'app appare nel launcher con icona NM Coaching.
+
+## Note tecniche importanti
+
+- **Supabase funziona normalmente**: il service worker rileva i domini Supabase e usa network-first, quindi i dati restano sempre live e sincronizzati.
+- **Funzionamento offline parziale**: gli asset statici (HTML, CSS, font, librerie CDN) sono cachati, quindi l'app si apre anche senza rete; le operazioni che richiedono Supabase falliranno silenziosamente offline.
+- **Chrome CDN**: Chart.js, Supabase JS e Google Fonts vengono cachati al primo caricamento online.
+- **Aggiornamenti**: per pubblicare una nuova versione modifica `index.html`/altri file e cambia `CACHE_VERSION` in `sw.js` (es. `nm-coaching-v12`). Al prossimo avvio l'app scaricherà la nuova versione e pulirà la cache vecchia.
+
+## Troubleshooting
+
+**PWABuilder dice che il manifest non è valido**: assicurati che l'URL su GitHub Pages sia HTTPS (lo è di default) e che `manifest.json` sia raggiungibile direttamente nel browser.
+
+**L'APK non installa**: controlla che "Origini sconosciute" sia abilitato per l'app sorgente.
+
+**L'icona è tagliata sul launcher Android**: questo è il motivo per cui ho generato anche le maskable — il manifest le include già con `purpose: "maskable"`.
+
+**Il Service Worker non si registra**: deve essere servito da HTTPS (GitHub Pages lo è) o da `localhost`. Da `file://` non funziona.
